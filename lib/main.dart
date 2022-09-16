@@ -9,7 +9,7 @@ import 'dart:io' show Platform;
 Uuid _UART_UUID = Uuid.parse("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
 Uuid _UART_RX = Uuid.parse("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
 Uuid _UART_TX = Uuid.parse("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
-
+String myBuffer = '';
 void main() {
   runApp(MyApp());
 }
@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter_reactive_ble example',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -61,14 +62,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _sendData() async {
+    String sendString = _dataToSendText.text;
+    sendString += '\n';
+    myBuffer = '';
     await flutterReactiveBle.writeCharacteristicWithResponse(_rxCharacteristic,
-        value: _dataToSendText.text.codeUnits);
+        value: sendString.codeUnits);
   }
 
   void onNewReceivedData(List<int> data) {
     _numberOfMessagesReceived += 1;
-    _receivedData
-        .add("$_numberOfMessagesReceived: ${String.fromCharCodes(data)}");
+    myBuffer += String.fromCharCodes(data);
+    _receivedData.add("${String.fromCharCodes(data)}");
     if (_receivedData.length > 5) {
       _receivedData.removeAt(0);
     }
@@ -201,9 +205,10 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            //mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               const Text("BLE UART Devices found:"),
               Container(
@@ -233,7 +238,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 4.0),
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.add_link),
+                                child: const Icon(
+                                    Icons.bluetooth_connected_outlined),
                               ),
                             ),
                             subtitle: Text(_foundBleUARTDevices[index].id),
