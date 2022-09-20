@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:location_permissions/location_permissions.dart';
 import 'dart:io' show Platform;
 
@@ -10,6 +11,7 @@ Uuid _UART_UUID = Uuid.parse("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
 Uuid _UART_RX = Uuid.parse("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
 Uuid _UART_TX = Uuid.parse("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
 String myBuffer = '';
+
 void main() {
   runApp(MyApp());
 }
@@ -32,6 +34,7 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -48,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController _dataToSendText;
   bool _scanning = false;
   bool _connected = false;
+  bool inFile = false;
   String _logTexts = "";
   List<String> _receivedData = [];
   int _numberOfMessagesReceived = 0;
@@ -65,16 +69,53 @@ class _MyHomePageState extends State<MyHomePage> {
     String sendString = _dataToSendText.text;
     sendString += '\n';
     myBuffer = '';
+    print("sending=> " + sendString);
     await flutterReactiveBle.writeCharacteristicWithResponse(_rxCharacteristic,
         value: sendString.codeUnits);
   }
 
+//TODO  add a filter to only capture text between < and >.  For
+  // Example "<abcd>" would only add "abcd" to mybuffer.
+  // need a state variable (inside_brackets).  If false then looking for
+  // '<'.  If true, routing all strings to myBuffer until a '>' is found
+  // Remember data is a list<int>  should convert to string first.
+  //  Very unlikely that a '<' and '>' will been in one session of data.
   void onNewReceivedData(List<int> data) {
     _numberOfMessagesReceived += 1;
-    myBuffer += String.fromCharCodes(data);
-    _receivedData.add("${String.fromCharCodes(data)}");
-    if (_receivedData.length > 5) {
-      _receivedData.removeAt(0);
+    String testStr = String.fromCharCodes(data);
+    print("Raw data in " + testStr);
+    //myBuffer += String.fromCharCodes(data);
+    for (var i = 0; i < data.length; i++) {
+      var character = data[i];
+      var stringCharacter = String.fromCharCode(character);
+      if (!inFile) {
+        if (stringCharacter == "<") {
+          print("found <");
+          inFile = true;
+        }
+      } else {
+        if (stringCharacter == ">") {
+          inFile = false;
+          print("found >");
+          print(myBuffer);
+
+          //write to file
+          // look pvt mobile code
+        } else {
+          myBuffer = myBuffer + stringCharacter;
+        }
+      }
+      /*if (stringCharacter == "<") {
+        print("found <");
+        inFile = true;
+      } else if (stringCharacter == ">") {
+        inFile = false;
+        print("found >");
+        print(myBuffer);
+      }
+      else if (inFile) {
+        myBuffer = myBuffer + stringCharacter;
+      }*/
     }
     refreshScreen();
   }
@@ -91,7 +132,59 @@ class _MyHomePageState extends State<MyHomePage> {
     refreshScreen();
   }
 
-  Future<void> showNoPermissionDialog() async => showDialog<void>(
+  //TODO FILE CREATION
+
+  /*Future<String?> get _localPath async {
+    WidgetsFlutterBinding.ensureInitialized();
+    //final directory = await getApplicationDocumentsDirectory();
+    final Directory? directory = await getExternalStorageDirectory();
+
+    return directory?.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    print('$path/zcm.txt');
+    return File('$path/zcm.txt');
+  }
+
+  Future<bool> readZCMFile() async {
+    try {
+      final file = await _localFile;
+      print("inside readZCMFile");
+      // Read the file
+      final contents = await file.readAsString();
+      print(contents);
+
+      return true;
+    } catch (e) {
+      // If encountering an error, return 0
+      print("catch in readZCMFile");
+      return false;
+    }
+  }
+
+  Future<File> writeZCMFile() async {
+    final file = await _localFile;
+    try {
+      await file.delete;
+    } catch (e) {
+      print(e);
+    }
+    print("writing file");
+    try {
+
+        file.writeAsStringSync(
+            myBuffer + "\r\n",
+            mode: FileMode.append);
+    } catch (e) {
+      print("error writing file");
+    }
+    final path = await _localPath;
+    List<String> myattachment = ['$path/zcm.txt'];*/
+
+
+    Future<void> showNoPermissionDialog() async => showDialog<void>(
         context: context,
         barrierDismissible: false, // user must tap button!
         builder: (BuildContext context) => AlertDialog(
