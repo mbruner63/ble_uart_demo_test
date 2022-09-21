@@ -98,14 +98,16 @@ class _MyHomePageState extends State<MyHomePage> {
         if (stringCharacter == ">") {
           inFile = false;
           print("found >");
-          print(myBuffer);
 
+          print(myBuffer);
+          // Once we find the end bracket, we can
+          // write the file
+          writeZCMFile();
+          readZCMFile();
           //write to file
           // look pvt mobile code
         } else {
           myBuffer = myBuffer + stringCharacter;
-          writeZCMFile();
-          readZCMFile();
         }
       }
     }
@@ -165,10 +167,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     print("writing file");
     try {
-
-        file.writeAsStringSync(
-            myBuffer + "\r\n",
-            mode: FileMode.append);
+      // force a file creation
+      file.writeAsStringSync("");
+      file.writeAsStringSync(myBuffer + "\r\n", mode: FileMode.append);
     } catch (e) {
       print("error writing file");
     }
@@ -179,9 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final Email email = Email(
       body: "ZCM File",
       subject: "ZCM",
-      recipients: [
-        "marty@bruner-consulting.com"
-      ],
+      recipients: ["marty@bruner-consulting.com"],
       attachmentPaths: myattachment,
       isHTML: false,
     );
@@ -195,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return file;
   }
 
-    Future<void> showNoPermissionDialog() async => showDialog<void>(
+  Future<void> showNoPermissionDialog() async => showDialog<void>(
         context: context,
         barrierDismissible: false, // user must tap button!
         builder: (BuildContext context) => AlertDialog(
