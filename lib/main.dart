@@ -4,6 +4,8 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:location_permissions/location_permissions.dart';
 import 'dart:io' show Platform;
+import 'dart:io';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 // This flutter app demonstrates an usage of the flutter_reactive_ble flutter plugin
 // This app works only with BLE devices which advertise with a Nordic UART Service (NUS) UUID
@@ -83,7 +85,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void onNewReceivedData(List<int> data) {
     _numberOfMessagesReceived += 1;
     String testStr = String.fromCharCodes(data);
-    print("Raw data in " + testStr);
     //myBuffer += String.fromCharCodes(data);
     for (var i = 0; i < data.length; i++) {
       var character = data[i];
@@ -103,19 +104,10 @@ class _MyHomePageState extends State<MyHomePage> {
           // look pvt mobile code
         } else {
           myBuffer = myBuffer + stringCharacter;
+          writeZCMFile();
+          readZCMFile();
         }
       }
-      /*if (stringCharacter == "<") {
-        print("found <");
-        inFile = true;
-      } else if (stringCharacter == ">") {
-        inFile = false;
-        print("found >");
-        print(myBuffer);
-      }
-      else if (inFile) {
-        myBuffer = myBuffer + stringCharacter;
-      }*/
     }
     refreshScreen();
   }
@@ -134,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //TODO FILE CREATION
 
-  /*Future<String?> get _localPath async {
+  Future<String?> get _localPath async {
     WidgetsFlutterBinding.ensureInitialized();
     //final directory = await getApplicationDocumentsDirectory();
     final Directory? directory = await getExternalStorageDirectory();
@@ -181,8 +173,27 @@ class _MyHomePageState extends State<MyHomePage> {
       print("error writing file");
     }
     final path = await _localPath;
-    List<String> myattachment = ['$path/zcm.txt'];*/
-
+    List<String> myattachment = ['$path/zcm.txt'];
+    print("Attachements for email");
+    print(myattachment);
+    final Email email = Email(
+      body: "ZCM File",
+      subject: "ZCM",
+      recipients: [
+        "marty@bruner-consulting.com"
+      ],
+      attachmentPaths: myattachment,
+      isHTML: false,
+    );
+    try {
+      await FlutterEmailSender.send(email);
+      print('success');
+    } catch (error) {
+      print(error.toString());
+    }
+    // Write the file
+    return file;
+  }
 
     Future<void> showNoPermissionDialog() async => showDialog<void>(
         context: context,
