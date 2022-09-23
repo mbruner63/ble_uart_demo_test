@@ -38,6 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_reactive_ble: ^4.0.0
   location_permissions: ^4.0.0
+  path_provider: ^2.0.11
+  flutter_email_sender: ^5.0.2
 
 dev_dependencies:
   flutter_test:
@@ -91,3 +93,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
