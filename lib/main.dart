@@ -88,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // '<'.  If true, routing all strings to myBuffer until a '>' is found
   // Remember data is a list<int>  should convert to string first.
   //  Very unlikely that a '<' and '>' will been in one session of data.
-  void onNewReceivedData(List<int> data) {
+  void onNewReceivedData (List<int> data) async {
     _numberOfMessagesReceived += 1;
     String testStr = String.fromCharCodes(data);
     for (var i = 0; i < data.length; i++) {
@@ -104,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
           inFile = false;
           print("found >");
           print(myBuffer);
-          writeFile();
+          await writeFile();
           readFile();
             if (myFile == "zcm.txt") {
               myFile = "demo.pvt";
